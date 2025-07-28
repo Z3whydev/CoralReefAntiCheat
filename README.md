@@ -30,11 +30,11 @@ Type /sk reload CoralReef in game/console
 
 Change any options at the top of the Skript.
 
-##⚙️ Commands
+## ⚙️ Commands
 
 /clrf access Coral Reef's disable/enable GUI
 
-##🔧 Config
+## 🔧 Config
 
 At the top of the CoralReef.sk you can set:
 
