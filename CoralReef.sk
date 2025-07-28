@@ -7,8 +7,6 @@ options:
     enable-ip-bans: true
     gui-enabled: true
 
-# Coral Reef - AntiCheat System
-
 on load:
     loop all players:
         set {coralreef.checks.flight::%loop-player%} to true
@@ -53,31 +51,26 @@ on inventory click:
             toggle {coralreef.checks.reach::%player%}
         if {_slot} is 7:
             toggle {coralreef.checks.fastbreak::%player%}
-        execute player command "/clrf"
+        open virtual chest inventory with 3 rows named "&dCoral Reef Checks" to player
 
-# --- Check Implementations ---
-
-# Flight Check
 on move:
     if {coralreef.checks.flight::%player%} is true:
         if player is not on ground:
-            if difference between y-coordinate of event-location and y-coordinate of previous location > 1.5:
+            if y-coordinate of event-location - y-coordinate of previous location > 1.5:
                 coralreef_alert(player, "Flight")
 
-# Speed Check
 on move:
     if {coralreef.checks.speed::%player%} is true:
-        if difference between x/z-coordinate of event-location and previous location > 1.2:
+        set {_dist} to sqrt((x-coordinate of event-location - x-coordinate of previous location)^2 + (z-coordinate of event-location - z-coordinate of previous location)^2)
+        if {_dist} > 0.7:
             coralreef_alert(player, "Speed")
 
-# KillAura (very basic version)
 on damage of player:
     if {coralreef.checks.killaura::%attacker%} is true:
         if attacker is a player:
-            if difference between attacker's yaw and victim's yaw > 180:
+            if abs(attacker's yaw - victim's yaw) > 180:
                 coralreef_alert(attacker, "KillAura")
 
-# AutoClicker
 on left click:
     if {coralreef.checks.autoclicker::%player%} is true:
         add 1 to {coralreef.cps::%player%}
@@ -86,35 +79,30 @@ on left click:
             coralreef_alert(player, "AutoClicker")
         delete {coralreef.cps::%player%}
 
-# NoFall
 on damage of player:
     if {coralreef.checks.nofall::%player%} is true:
         if damage cause is fall:
             if fall distance of player < 2:
                 coralreef_alert(player, "NoFall")
 
-# Timer
 every 5 ticks:
     loop all players:
         if {coralreef.checks.timer::%loop-player%} is true:
             if loop-player's ping < 5:
                 coralreef_alert(loop-player, "Timer")
 
-# Reach
 on damage of player:
     if {coralreef.checks.reach::%attacker%} is true:
         if attacker is a player:
             if distance between attacker and victim > 6:
                 coralreef_alert(attacker, "Reach")
 
-# FastBreak
 on block break:
     if {coralreef.checks.fastbreak::%player%} is true:
         if block type is obsidian:
-            if tool is not diamond pickaxe:
+            if player's tool is not diamond pickaxe:
                 coralreef_alert(player, "FastBreak")
 
-# --- Core Function ---
 function coralreef_alert(p: player, type: text):
     send "{@prefix}&c⚠️ %p% triggered &l%type%&r&c check!" to all players where [input has permission "coralreef.alert"]
     if {@log-to-file} is true:
@@ -130,6 +118,5 @@ function coralreef_alert(p: player, type: text):
         coralreef_webhook("%p% triggered %type% check.")
 
 function coralreef_webhook(content: text):
-    # Requires Vixio or similar Discord webhook plugin integration
-    set {_json} to json from "{"content": "%content%"}"
+    set {_json} to "{""content"": ""%content%""}"
     make a post request to "{@webhook-url}" with headers "Content-Type: application/json" and body {_json}
